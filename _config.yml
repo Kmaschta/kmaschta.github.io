@@ -1,0 +1,19 @@
+title: Web Developer
+email: pro@kmaschta.me
+description: > #
+baseurl: ""
+url: "https://www.kmaschta.me"
+twitter_username: Kmaschta
+github_username: Kmaschta
+
+# Build settings
+markdown: kramdown
+kramdown:
+    input: GFM
+theme: minima
+
+exclude:
+    - Gemfile
+    - Gemfile.lock
+    - Makefile
+    - README.md
