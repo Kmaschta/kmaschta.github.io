@@ -2,6 +2,10 @@
       <div class="wrapper">
 {% if page.footer_nav %}{% include nav.html %}{% endif %}
         <div class="copyright">Kévin Maschtaler &copy; {{ site.time | date: '%Y' }}</div>
+		{% if page.lang == 'fr' %}
+		<div class="disclaimer">Merci à <a href="https://nickcraver.com/" target="_blank">Nick Craver</a> pour le style</div>
+		{% else %}
 		<div class="disclaimer">Credits to <a href="https://nickcraver.com/" target="_blank">Nick Craver</a> for the style</div>
+		{% endif %}
       </div>
     </footer>

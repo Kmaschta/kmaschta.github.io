@@ -2,8 +2,8 @@
       <div class="wrapper">
         <a class="site-title" href="/">
 		  <img src="/img/logo.png" class="logo" />
-          Kévin Maschtaler <span class="site-subtitle">Web Developer</span>
+		  Kévin Maschtaler <span class="site-subtitle">{% if page.lang == 'fr' %}Développeur Web{% else %}Web Developer{% endif %}</span>
         </a>
-{% include nav.html %}    
+		{% include nav.html %}
       </div>
     </header>
