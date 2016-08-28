@@ -3,8 +3,9 @@ email: pro@kmaschta.me
 description: > #
 baseurl: ""
 url: "https://www.kmaschta.me"
-twitter_username: Kmaschta
-github_username: Kmaschta
+twitter: Kmaschta
+github: Kmaschta
+google_analytics_ua: UA-83286822-1
 
 # Build settings
 markdown: kramdown
