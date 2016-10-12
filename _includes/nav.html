@@ -2,12 +2,13 @@
 	{% if page.lang == 'fr' %}
 	<a class="page-link{% if page.section == 'home' %} active{% endif %}" href="/fr/">Accueil</a>
 	<a class="page-link{% if page.section == 'talks' %} active{% endif %}" href="/fr/talks/">Conférences</a>
-	<!-- <a class="page-link{% if page.section == 'blog' %} active{% endif %}" href="/blog/">Blog</a> -->
+	<!-- @TODO Translate blog page -->
+	<a class="page-link{% if page.section == 'blog' %} active{% endif %}" href="/blog/">Blog</a>
 	<a class="page-link" href="/">EN</a>
 	{% else %}
 	<a class="page-link{% if page.section == 'home' %} active{% endif %}" href="/">Home</a>
 	<a class="page-link{% if page.section == 'talks' %} active{% endif %}" href="/talks/">Talks</a>
-	<!-- <a class="page-link{% if page.section == 'blog' %} active{% endif %}" href="/blog/">Blog</a> -->
+	<a class="page-link{% if page.section == 'blog' %} active{% endif %}" href="/blog/">Blog</a>
 	<a class="page-link" href="/fr">FR</a>
 	{% endif %}
 
