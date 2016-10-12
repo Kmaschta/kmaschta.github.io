@@ -1,20 +1,23 @@
 title: Web Developer
 email: pro@kmaschta.me
-description: > #
+description: "Kévin Maschtaler's Blog"
 baseurl: ""
 url: "https://www.kmaschta.me"
 twitter: Kmaschta
 github: Kmaschta
-stackoverflow: users/3868326/kmaschta
 linkedin: kmaschta
 gmail: kevin.maschtaler@gmail.com
 google_analytics_ua: UA-83286822-1
 
 # Build settings
+permalink: /:categories/:year/:month/:day/:title/
 markdown: kramdown
 kramdown:
     input: GFM
 theme: minima
+excerpt_separator: <!--more-->
+
+disqus: kmaschta
 
 exclude:
     - Gemfile
