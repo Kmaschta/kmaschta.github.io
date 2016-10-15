@@ -1,5 +1,5 @@
 Salut internet.
-Je suis Kévin Maschtaler, un développeur web depuis quelques années, mais j'ai commencé à jouer avec les ordinateurs à 12 ans.
+Je suis Kévin Maschtaler, un développeur web qui a commencé à jouer avec les ordinateurs à 12 ans.
 
 Maintenant à <acronym title="On recrute !">[marmelab](http://www.marmelab.com), un atelier d'innovation digitale sympa</acronym> où j'apprends plein de choses et développe des projets innovants avec des technologies très modernes. Je code essentiellement en JavaScript pour le travail ou l'open-source, Python pour le fun ou les side-projects et je m'intéresse à des plein de sujets variés comme le sysadmin, la sécurité informatique, la crypto-monnaie, etc.
 
