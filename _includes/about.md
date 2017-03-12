@@ -1,7 +1,7 @@
 Hi internet.
 I am Kévin Maschtaler, a french web developer since a few years who started to fiddle with computers at twelve years old.
 
-Now at <acronym title="We are recruiting!">[marmelab](http://www.marmelab.com), a nice Digital Innovation Workshop</acronym> where I learn a lot of stuff and make things done on innovative projects with very modern technologies. I mostly write JavaScript for work or open-source, Python for fun or side-projects and my interest goes to various topics such as sysadmin, security, crypto-currencies, etc.
+Now at <acronym title="We are hiring!">[marmelab](http://www.marmelab.com), a nice Digital Innovation Workshop</acronym> where I learn a lot of stuff and make things done on innovative projects with very modern technologies. I mostly write JavaScript for work or open-source, Python for fun or side-projects and my interest goes to various topics such as sysadmin, security, crypto-currencies, etc.
 
 Fullstack developer, DevOps, internet's builder, something between or all at once. I wear multiple hats, even freelancer. I like to rub shoulders with startupers in order to learn new methods or just listen stories.
 
