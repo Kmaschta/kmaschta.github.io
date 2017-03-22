@@ -2,8 +2,15 @@
 <meta property="og:title" content="{% if page.title %}{{ page.title }} | Kévin Maschtaler{% else %}Kévin Maschtaler | Blog{% endif %}" />
 <meta property="og:url" content="{{ page.url | prepend: site.baseurl | prepend: site.url }}" />
 <meta property="og:image" content="{% if page.image %}{{ page.image | prepend: site.url }}{% else %}{{ '/img/logo.png' | prepend: site.url }}{% endif %}" />
-<meta property="og:description" content="{% if page.excerpt %}{{ page.excerpt | strip_html }}{% else %}Hi interweb users.{% endif %}" />
+<meta property="og:description" content="{% if page.excerpt %}{{ page.excerpt | strip_html | truncatewords:100 }}{% else %}Hi interweb users.{% endif %}" />
 <meta property="og:site_name" content="Kévin Maschtaler | Blog" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:creator" content="@{{ site.twitter }}">
+<meta name="twitter:site" content="{{ page.url | prepend: site.baseurl | prepend: site.url }}" />
+<meta name="twitter:title" content="{% if page.title %}{{ page.title }} | Kévin Maschtaler{% else %}Kévin Maschtaler | Blog{% endif %}" />
+<meta name="twitter:description" content="{% if page.excerpt %}{{ page.excerpt | strip_html | truncate:200 }}{% else %}Hi interweb users.{% endif %}" />
+<meta name="twitter:image" content="{% if page.image %}{{ page.image | prepend: site.url }}{% else %}{{ '/img/logo.png' | prepend: site.url }}{% endif %}" />
 
 {% if page.layout == 'post' %}
 <meta property="og:type" content="article" />
