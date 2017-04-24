@@ -11,15 +11,15 @@ tag:
 - serverless
 ---
 For a Single-Page Application (SPA), you often need an authentication from a trusted service like Google, Facebook, Twitter, Github and so on.
-Most of the time, you have a server with an API to handle this feature. But what if it's not the case?
+Most of the time, you need a server with an API to handle this feature. But what if you could avoid it?
 
-While creating a simple page for [Sedy](https://marmelab.com/sedy/), I was in this position: I just wanted that users can log from GitHub and have a button to install Sedy on their repositories. But I didn't want a server just for this.
+While creating a simple page for [Sedy](https://marmelab.com/sedy/), I was in this position: I just wanted users to log with their GitHub account, and see a button to install Sedy on their repositories. But I didn't want a server just for this.
 
 Let's see how we can implement a GitHub Oauth authentication with another approach.
 <!--more-->
 
 ## How the GitHub Oauth implementation works
-The [Oauth2 specification](https://oauth.net/2/) offers multiple authorization methods, but GitHub doesn't supports the `Implicit Grant` which works well with client-only applications such as a Single-Page Application.
+The [Oauth2 specification](https://oauth.net/2/) offers multiple authorization methods, but GitHub doesn't supports the `Implicit Grant`, which works well with client-only applications such as a Single-Page Application.
 
 The only method supported by GitHub is the `Application Code Grant`:
 
@@ -29,31 +29,31 @@ The only method supported by GitHub is the `Application Code Grant`:
 	</a>
 </center>
 
-As you can see, the **Exchange Code for Access Token** step requires to send your `client secret`. The problem is that you can't publish any secret token in a SPA since the code is accessible to every user. Please don't do that.
+As you can see, the **Exchange Code for Access Token** step requires that you send your `client secret`. The problem is that you can't publish any secret token in a SPA, since the code is accessible to every user. Please don't do that.
 
-Instead, you need to have another server that works like a proxy, receive your request, ask GitHub to transform your code into an access token and give to the SPA. We can represent that behavior into a simple function:
+Instead, you need to have another server that works like a proxy, which receives your request, asks GitHub to transform your code into an access token, and passes it to the SPA. We can represent that behavior as simple function:
 
 ```js
-function transformCodeToAccessToken(code) {
-    return askGitHub(code, clientId, clientSecret, redirectUri);
+function transformCodeToAccessToken(GITHUB_CODE) {
+    return askGitHub(GITHUB_CODE, clientId, clientSecret, redirectUri);
 }
 ```
 
-For a while, I was using a third-party service to this job: [hello.js](https://adodson.com/hello.js/), but it comes with some big issues:
+At start, I was using a third-party service to do this job: [hello.js](https://adodson.com/hello.js/). But it comes with some big issues:
 
-- You need to trust this service by give it your GitHub secret token
+- You need to trust this service by giving it your GitHub secret token
 - It's a critical dependency of your project. What if the hello.js server is down?
 - It doesn't work well with HTTPS
 
-But hey, can we make this function work in an AWS Lambda? Of course, we can.
+Is it possible to replace hello.js with a function running in an AWS Lambda?
 
 
-## Let's code that function
+## A Very Simple Function
 First, what do we need?
 
-- Retrieve the client request
-- Send this request to GitHub API with the secret token
-- Secure your function by verifying the request origin
+1. Retrieve the client request
+2. Send this request to the GitHub API with the secret token
+3. Secure your function by verifying the request origin
 
 In order to deploy the code into an Lambda Function, you just need write a JavaScript file which exports a `handler` function.
 
@@ -113,12 +113,12 @@ module.exports = { handler: handler };
 ```
 {% endraw %}
 
-## Deploy the function and expose it to the web
-Even if the so hyped [Serverless Framework](https://github.com/serverless/serverless) allows you to deploy your function on all the providers you want, it comes with a overwhelming complexity. I choose AWS Lambda because I have an AWS account, but you can do the same with Google CloudFunctions or Azure Functions.
+## Deploy the Function and Expose it to the Web
+Even if the so hyped [Serverless Framework](https://github.com/serverless/serverless) allows you to deploy your function on all the providers you want, it comes with an overwhelming complexity. I choose AWS Lambda because I have an AWS account, but you can do the same with Google CloudFunctions or Azure Functions.
 
-So, log into to your AWS account and create a new Lambda Function for Node 4.3, configure `index.handler` as the handler and copy-paste your code in the `Code` tab.
+So, log into to your AWS account and create a new Lambda Function for Node 4.3, configure `index.handler` as the handler, and copy-paste your code in the `Code` tab.
 
-I don't explain the whole process here but when it comes to chose a trigger, you have to create an **API Gateway** in order to expose an endpoint which will trigger your Lambda Function.
+I won't explain the whole process here, but when it comes to choosing a trigger, you have to create an **API Gateway** in order to expose an HTTP endpoint, which will trigger your Lambda Function.
 
 There are two tricky points with your API Gateway that you need to address:
 
@@ -127,7 +127,7 @@ There are two tricky points with your API Gateway that you need to address:
 
 For the first point, I let you check [the documentation about API Gateway and CORS](https://github.com/serverless/serverless).
 
-About the `event` argument, in the case that the trigger is an API Gateway, it's the representation of the HTTP request sent to the endpoint.
+About the `event` argument, in case the trigger is an API Gateway, it's the representation of the HTTP request sent to the endpoint.
 By default, the representation only contains the request body, but we need to have both the body and the HTTP headers.
 
 To do so, go to the API Gateway menu, click on the new API and select the HTTP verb, in my case it's `ANY`.
@@ -148,10 +148,13 @@ What we want to change here is a new **Body Mapping Template** for all `applicat
   }
 }
 ```
+*Note: This weird pseudo-language is used by API Gateway to map the request and/or the response into a JSON. See [API Gateway API Request and Response Payload-Mapping Template Reference](http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html).*
 
-Hence, we have a `body` and a `headers` variables that contains all the informations we retrieve as the first argument of our `handler` function. Don't forget to save your changes and deploy the new API configuration.
+Finally, we have a `body` and a `headers` variables that contain all the information we retrieve as the first argument of our `handler` function. Don't forget to save your changes and deploy the new API configuration.
 
-Here we are! You can now use your new endpoint to transform your GitHub code into an access token from your Single-Page App.
+You can now use your new endpoint to transform your GitHub code into an access token from your Single-Page App.
+
+This request, for example, represents your **Exchange Code for Access Token** step on the chart.
 
 ```
 POST https://[ID].execute-api.[REGION].amazonaws.com/prod/[FUNCTION]
@@ -162,5 +165,6 @@ Content-Type: application/json
     "code": "GITHUB_CODE"
 }
 ```
+*Note: `GITHUB_CODE` is your **Exchange Code** as defined in the first part.*
 
 If you want more details about the usage or the integration of such a function, you can take a look on [the Sedy repository](https://github.com/marmelab/sedy).
