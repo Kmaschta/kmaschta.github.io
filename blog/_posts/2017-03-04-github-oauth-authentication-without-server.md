@@ -167,4 +167,4 @@ Content-Type: application/json
 ```
 *Note: `GITHUB_CODE` is your **Exchange Code** as defined in the first part.*
 
-If you want more details about the usage or the integration of such a function, you can take a look on [the Sedy repository](https://github.com/marmelab/sedy).
+If you want more details about the usage or the integration of such a function, you can take a look on [the Sedy repository](https://github.com/marmelab/sedy/blob/9996067cc1d379302f0152ec677f9b2d766711b1/oauth/src/index.js)).
