@@ -4,42 +4,46 @@ author: Kévin Maschtaler
 title: "Efficient Deployments Thanks To Configurable Artifacts"
 date: 2017-12-21 16:00:00
 image: /blog/content/partial-deployment-pipeline.png
+canonical: https://marmelab.com/blog/2018/01/22/configurable-artifact-in-deployment.html
 tags:
 - devops
 ---
 
-As your project and your team grows, feature deployment becomes a critical part of your development process.
-Knowing how to deploy quickly and safely to production can be a lifesaver skill for your company.
-To this end, let me introduce you the artifact-based deployment process!
+When a project team grows, feature deployments become more frequent. Automating these deployments then becomes critical to optimize the development workflow. In my opinion, the best practice is artifact-based deployment, a lifesaver process that I use as much as possible. It's quite popular, and part of the <a href="https://12factor.net/config">The Twelve-Factor App</a> pattern.
+
+This article illustrates artifact-based deployment in simple terms, through a practical example.
 <!--more-->
 
 
 ## What Is A Deployment Artifact
 
 Artifacts aren't a new thing, but like every good practice, it's better when written down.
-This article aims to help teams that haven't automated their deployment yet.
-So, let's start with the basics.
 
-A deployment artifact (or a `build`) is your application code as it runs on production: compiled, built, bundled, minified, optimized and so on ; most often in a compressed folder or a binary.
+A deployment artifact (or a `build`) is the application code as it runs on production: compiled, built, bundled, minified, optimized, and so on. Most often, it's a single binary, or a bunch of files compressed in an archive.
 
-In such a state, you can store and version it. The ultimate goal of an artifact is to be downloaded as fast as possible on a server and ran immediately with no service interruption.
+In such a state, you can store and version an artifact. The ultimate goal of an artifact is to be downloaded as fast as possible on a server, and run immediately, with no service interruption.
 
-Also, it should be configurable (we'll see how later) in order to be deployable on any environment. It is the same artifact that must be deployed on staging then on production, for example.
+Also, an artifact should be configurable in order to be deployable on any environment. For example, if you need to deploy to staging and production servers, you should be able to use the same arifact.
 
-Yes, you read it right: Only the configuration must change, not the artifact itself. It can seem harmful or difficult, but it's the main feature of a deployment artifact.
-If you have to build twice your artifact for two environments, you are missing the whole point.
+Yes, you read that right: Only the configuration must change, not the artifact itself. It can seem harmful or difficult, but it's the main feature of a deployment artifact. If you have to build twice your artifact for two environments, you are missing the whole point.
 
 
-## Lifecycle of an Artifact
+## The Example Project: a Basic Proxy
 
-Say we have a simple project to deploy, like a basic HTTP proxy in order to add a random HTTP header to every requests.
-The code is available in this gist: [Kmaschta/0920c6a7781cdf15c37a51b370e4fb66](https://gist.github.com/Kmaschta/0920c6a7781cdf15c37a51b370e4fb66)
+Let's take an example project to deploy. I'll write a basic HTTP proxy, adding a random HTTP header to every request, in Node.js.
 
-First install the dependencies and write the little proxy:
+ 
+**Tips:** The code is available in <a href="https://gist.github.com/Kmaschta/0920c6a7781cdf15c37a51b370e4fb66">this gist</a>.
+
+First, install the dependencies:
+
 ```bash
-$ mkdir deployment-example && cd deployment example
+$ mkdir deployment-example && cd $_ # cd into the directory just created
+$ npm init --yes
 $ npm install --save express axios reify
 ```
+
+Here is the server, proxying all requests to the `http://perdu.com` backend, after adding a random header:
 
 ```js
 // server.js
@@ -67,30 +71,39 @@ app.listen(port);
 console.log(`Proxy is running on port ${port}. Press Ctrl+C to stop.`);
 ```
 
+**Tips:** Did you notice how I used environment variables via `process.env`? It's central to my point, keep it in mind for later.
+
+A small makefile to run the server:
+
 ```makefile
-# Makefile
 start:
     # reify is a small lib to fully support import/export without having to install the babel suite
     node --require reify server.js
 ```
 
 The server is runnable on local environment, it's all good, "it works on my machine™":
+
 ```bash
 $ make start
 > Proxy is running on port 3000. Press Ctrl+C to stop.
 ```
 
-Now let's ship this code on a staging environment to test it with somewhat real conditions. At this point, it's a good idea to freeze a version of this code with a GitHub release for example.
 
-The simplest way to prepare the deployment is to **build** a zip file with the source code and all its dependencies.
+### Building an Artifact
+
+Now let's ship this code to a staging environment, in order to test it in somewhat real conditions.
+
+At this point, it's a good idea to freeze a version of the code (with a Git tag or a GitHub release for instance).
+
+The simplest way to prepare the deployment is to **build** a zip file with the source code and all its dependencies. I'll add the following target to the `makefile`, creating a zip with the identifier of the latest commit:
 
 ```makefile
-.PHONY: build
-
 build:
     mkdir -p build
     zip 'build/$(shell git log -1 --pretty="%h").zip' Makefile package.json -R . '*.js' -R . '*.json'
 ```
+
+And it works:
 
 ```bash
 $ make build
@@ -98,20 +111,21 @@ $ ls build/
 > 4dd370f.zip
 ```
 
-The build step is simplified here, but on real projects you can use a bundler, a transpiler, a minifier, and so on.
+The build step is simplified here, but on real projects it can imply a bundler, a transpiler, a minifier, and so on.
 All these lengthy tasks should be done at the build step.
 
-The resulting zip file is what we can call an **artifact**.
-It can be deployed on an external server or be stored in a S3 bucket for later usage.
+The resulting zip file is what we can call an **artifact**. It can be deployed on an external server, or be stored in a S3 bucket for later usage.
 
-Once you find the build process that fits you, automate it!
-Usually, a Continuous Integration / Continuous Delivery (CI/CD) system like Travis or Jenkins runs the tests, and if they pass, build the artifact in order to store it.
+**Tips:** Once you find the build process that fits you, automate it! Usually, a Continuous Integration / Continuous Delivery (CI/CD) system like Travis or Jenkins runs the tests, and if they pass, build the artifact in order to store it.
 
-Now to deploy the artifact, just copy this file on the server, extract it and run the code.
+
+### Deploying the Artifact
+
+To deploy the artifact, just copy this file on the server, extract it, and run the code. I automate it again as a `makefile` target:
 
 ```makefile
 TAG ?=
-SERVER ?= staging-server
+SERVER ?= proxy-staging
 
 deploy:
     scp build/$(TAG).zip $(SERVER):/data/www/deployment-example/
@@ -125,26 +139,36 @@ deploy:
     echo 'Deployed $(TAG) version to $(SERVER)'
 ```
 
+I use environment variables to specify the tag I want to deploy:
+
 ```bash
 $ TAG=4dd370f make deploy
-> Deployed 4dd370f version to staging-server
+> Deployed 4dd370f version to proxy-staging
 ```
 
-**Tip:** Use your local <code>~/.ssh/config</code> to save your server credentials.
-This way you can securely share them with your co-workers and keep these credentials outside of the repository while having the deployment instructions in the the Makefile.
+As you can see, the deployment is actually very fast, because I don't need to *build* in the target environment.
+
+**Tips:** That means that if the build contains binaries, they must be compiled for the target environment. To simplify, it means you should *develop* your code on the same system as you *run* it. It's simpler that it sounds once you use Vagrant or Docker.
+
+**Tips:** I used the <code>ssh</code> command without any credential arguments. You don't want those credentials in a <code>makefile</code>, so I advise to use your local <code>~/.ssh/config</code> to save them. This way, you can securely share them with your co-workers, and keep these credentials outside of the repository - while having the deployment instructions in the the Makefile. Here is an exampe SSH configuration for my <code>proxy-staging</code>:
 
 ```config
-Host staging-server
+Host proxy-staging
     Hostname staging.domain.me
     User ubuntu
     IdentityFile ~/.ssh/keys/staging.pem
 ```
 
-As you can see, the deployment is actually very fast. What if we want to deploy the same build on production with a different port?
-Nothing could be simpler. All we need is to be sure that when the code is run, the environment variable `NODE_PORT` is set to the correct value.
 
-There is many ways to achieve this **configuration**, the simplest one is to directly write your environment variables in the file `~/.ssh/environment` of your server.
-In this case, you don't need to remember how or when to retrieve your configuration: it's loaded automatically each time you log into the machine.
+### Deploying to Several Environments
+
+The server can now run in the `proxy-staging` server, with the default configuration. What if I want to deploy the same build to a `proxy-production` server, but with a different port?
+
+All I need is to be sure that wherever the code runs, the `NODE_PORT` environment variable is set to the correct value.
+
+There are many ways to achieve this **configuration**.
+
+The simplest one is to directly write the values of the environment variables in a `~/.ssh/environment` file in each server. That way, I don't need to remember how or when to retrieve the configuration: it's loaded automatically each time I log into the machine.
 
 ```bash
 > ssh production-server "echo 'NODE_PORT=8000' >> ~/.ssh/environment"
@@ -155,62 +179,61 @@ NODE_PORT=8000
 PROXY_HOST=https://host.to.proxy
 ```
 
-Now you just have to deploy on the production server the same artifact that you've used for the staging, no need to rebuild.
+Now I can deploy to `proxy-production` the same artifact that I've used for `proxy-staging`, no need to rebuild.
 
 ```bash
-$ TAG=4dd370f SERVER=production-server make deploy
-> Deployed 4dd370f version to production-server
+$ TAG=4dd370f SERVER=proxy-production make deploy
+> Deployed 4dd370f version to proxy-production
 ```
 
-That's it. The **rollback** is as simple as a deployment of the previous artifact.
+That's it. 
 
-At this point, it is easy to automate the process: let the CI build an artifact each time a PR is merged or on every push on master (Travis, Jenkins, every CI allows to implement a build phase) and store this build somewhere with a specific tag such as the commit hash or the release tag.
+**Tips:** The <strong>rollback</strong> is as simple as a deployment of the previous artifact.
 
-When somebody want to deploy, just run a script on the server that will download the artifact, configure it thanks to the environment variables and run it.
+At this point, it is easy to automate the process: let the CI build an artifact each time a PR is merged, or on every push to master (Travis, Jenkins, and every other CI allow to implement a build phase). Then, store this build somewhere with a specific tag, such as the commit hash or the release tag.
+
+When somebody wants to deploy, they can run a script on the server that downloads the artifact, configures it thanks to the environment variables, and runs it.
+
+**Tips:** If you don't want to write your environment variables on every production server you have, you can use a **configuration manager** like <a alt="comfygure" href="https://github.com/marmelab/comfygure">comfygure</a>. Disclaimer: We wrote it!
 
 
-**Tip:** If you don't want to write your environment variables on every production server you have, you can take a look at a configuration manager like [comfygure](https://github.com/marmelab/comfygure)!
-You can also read <a href="https://12factor.net/config">what the Twelve-Factor App guide says about configuration</a>.
-
-
-## Cool! Should I Use This Method On My Project Right Now?
+## When You Should Use Artifact-Based Deployment
 
 Artifact-based deployment comes with many advantages. It is quick to deploy, instant to rollback, the backups are available and ready to run.
 
-It is the same code that runs on every environments, in fact the deployment becomes a configuration issue. If a bunch of code works on staging, there is no reason that it fails on production, unless there is a mistake in the configuration or your environments aren't the same. For that reason, it's a good idea to invest in a staging environment that is strictly equal to the production.
+It allows to run the exact same code on every environment. In fact, with artifacts, the deployment becomes a *configuration* issue. If a bunch of code works on staging, there is no reason that it should fail on production, unless there is a mistake in the configuration - or the environments aren't the same. For that reason, it's a good idea to invest in a staging environment that strictly confiormas to the production environment. 
 
-Feature flagging is easier with such a deployment process, just check the environment variables.
+Feature flagging is also easier with such a deployment process: just check the environment variables. And last but not least, the deployment can be automated to such an extent that it can be done by a non-technical person (like a product owner). We do it, and our customers love it.
 
-And last but not least, the deployment can be so automated that it can be done by a product owner and not by a developer. We do it, it's really great.
+But automating such a process comes with a substantial cost. It takes time to install and maintain, because when the build process involves more than just zipping a few files, you need to run it with a *bundler* like Webpack. Also, consider the extra disk space necessary to store the artifacts and the backups. 
 
-But automate such a process comes with a substantial cost: it takes time to install and maintain, and the extra space to store the artifacts and the backups cost money.
+**Tips:** Use environment variables, do not check the environment. Try to find instances of `if (env !== 'production')` in your code, and replace them with a significant environment variable, like `if (process.env.LOGGING_LEVEL === 'verbose')`.
 
-Moreover, this technique makes **stateless application** mandatory and the code must not depend of an environment or another. Try to find all `if (env === 'production')` in your code. That said, a stateless application is much easier to debug and scale.
+No need of such a deployment process for a proof-of-concept, an early project, or a solo developer. All the advantages come with a team working on a mature project.
 
-No need of such a deployment process for a POC, an early project or a solo developer. All the advantages come with a team who works on a mature project.
-
-Ask yourself how many time do you spend on deployment and take a look at this chart!
+Ask yourself how many time you spend on deployment, and take a look at this chart!
 
 ![xkcd: Is it worth the time?](https://imgs.xkcd.com/comics/is_it_worth_the_time.png)
 
-**But my project is an SPA / PWA. I must configure my bundle at the build phase!**
 
-You don't have to. There is many ways to configure a SPA later in the process, like read a `config.json` located elsewhere than your static assets or write a `window.__CONFIG__` through server side rendering, and so on.
+## Frequently Asked Questions
+
+**My project is an SPA / PWA. I must configure my bundle at the build phase!**
+
+You don't have to. There is many ways to configure a Single Page Application later in the process. For instance, load a `config.json` at runtime from a different location than the other static assets. Or, write a `window.__CONFIG__` with server side rendering.
 
 Don't be afraid to display the frontend config, it'll be easier to debug. If you have sensible informations in your frontend configuration hidden in your minified and cryptic webpack build, you're already doing it wrong.
 
-**And what about database migrations?**
+**What about database migrations?**
 
-Migrations don't have to be run with the application deployment but should have their own pipeline that can be triggered at the appropriate moment.
-This way, you can handle each deployment on their own and rollback them independently.
+Migrations don't have to run when the application deploys. They should have their own pipeline, that can be triggered at the appropriate moment. This way, you can handle each deployment on its own, and rollback any of them independently. It clearly implies to do backups a lot, and to have revertable migrations.
 
-It clearly implies to do backups a lot and have revertable migrations.
-In case of big or painful migrations, don't hesitate to do it step by step. For example, how to move a table: first create the new table, then copy the data and finally delete the resulting table in three different migrations.
-The application can be deployed between the copy and the table deletion. If something goes wrong, the application can be reverted quickly without touching the database.
+In case of big or painful migration, don't hesitate to do it step by step. For example, how to move a table: first create the new table, then copy the data, and finally delete the resulting table in three different migrations. The application can be deployed between the copy and the table deletion. If something goes wrong, the application can be reverted quickly without touching the database.
+
 
 ## Conclusion
 
-Once this process is correctly installed it allows teams and product owners to be more confident about deployment that becomes quicker and safer.
+Once this process is correctly installed, deployments become quicker and safer. It allows teams and product owners to be more confident about deployments.
 
 Artifact-based deployment is a powerful technique that is truly worth considering when a project gets close to its maturity.
 It matches perfectly with agile methodologies like SCRUM, even more with Kanban, and it's a prerequisite to continuous delivery.

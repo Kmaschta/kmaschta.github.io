@@ -6,7 +6,7 @@
     {% if site.gmail %}<meta rel="rev" content="{{ site.gmail }}">{% endif %}
     <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,600' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" href="{{ "/css/main.css" | prepend: site.baseurl }}">
-	{% if page.canonical %}<link rel="canonical" href="{{ page.canonical | replace:'index.html','' | prepend: site.baseurl | prepend: site.url }}">{% endif %}
+	{% if page.canonical %}<link rel="canonical" href="{{ page.canonical }}" />{% endif %}
     <link rel="alternate" type="application/rss+xml" title="Kévin Maschtaler - {{ site.title }}" href="{{ "/blog/feed.xml" | prepend: site.baseurl }}" />
 
     {% include ogdata.html %}
