@@ -4,7 +4,7 @@ author: Kévin Maschtaler
 title: "Debugging Node.js Application Memory 101"
 excerpt: "An introduction to memory debugging from identification to correction using Chrome DevTools through simple examples"
 date: 2018-03-13 20:00:00
-image: /blog/content/memory/cookie-monster-big.png
+image: /blog/content/memory/cookie-monster.png
 tags:
 - node-js
 - js
