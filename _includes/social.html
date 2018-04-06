@@ -1,4 +1,10 @@
-<div class="social-list">{% if site.gmail %}
+<div class="social-list">{% if site.keybase %}
+	<a href="https://keybase.io/{{ site.keybase }}">
+		<span class="icon  icon--keybase">
+			{% include svg/keybase.svg %}
+		</span>
+	</a>
+{% endif %}{% if site.gmail %}
 	<!--<a href="mailto:{{ site.gmail }}">
 		<span class="icon icon--gmail">
 			{% include svg/gmail.svg %}
